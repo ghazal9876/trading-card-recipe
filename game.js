@@ -24,7 +24,7 @@ scoreBoard.style = 'display:flex;justify-content:center;gap:1rem;margin:0 auto 1
 scoreBoard.innerHTML = `<div class="score-box">${playerNames[0]}<br><strong id="score-one">0</strong></div><div class="score-box">${playerNames[1]}<br><strong id="score-two">0</strong></div>`;
 document.querySelector('.wrap').insertBefore(scoreBoard, board);
 const scoreStyle = document.createElement('style');
-scoreStyle.textContent = '.score-box{flex:1;padding:.8rem;border:1px solid #765739;border-radius:1rem;background:#211d1c;color:#f5d58b;text-align:center;font:700 .8rem DM Sans}.score-box strong{font:900 1.8rem Cinzel}';
+scoreStyle.textContent = '.score-box{flex:1;padding:.65rem;border:1px solid #765739;border-radius:1rem;background:#211d1c;color:#f5d58b;text-align:center;font:700 .75rem DM Sans}.score-box strong{font:900 1.4rem Cinzel}.wrap{padding:2rem 0}.gallery{gap:.7rem}.face{padding:.8rem}.art{height:8rem;min-height:0;margin:.7rem 0}.creature{font-size:5rem}.explain{font-size:.72rem}.label{font-size:.55rem}.flip-back{min-height:18rem;font-size:1.2rem}@media(max-width:800px){.wrap{padding:1.5rem 0}.gallery{grid-template-columns:repeat(2,1fr)}.art{height:7rem}.creature{font-size:4rem}}@media(max-width:500px){.gallery{grid-template-columns:1fr}}';
 document.head.appendChild(scoreStyle);
 
 const turnIndicator = document.createElement('p');
