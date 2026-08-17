@@ -1,4 +1,12 @@
 const board = document.querySelector('.gallery');
+const params = new URLSearchParams(location.search);
+const playerNames = [params.get('p1') || 'Player 1', params.get('p2') || 'Player 2'];
+const exit = document.createElement('button');
+exit.type = 'button';
+exit.textContent = '← Exit';
+exit.style = 'position:fixed;z-index:5;top:1.5rem;left:1.5rem;padding:.7rem 1rem;border:1px solid #d5ae63;border-radius:999px;color:#f8efd8;background:#211d1c;font:700 .8rem DM Sans;cursor:pointer';
+exit.addEventListener('click', () => { window.location.href = 'index.html'; });
+document.body.appendChild(exit);
 const originals = [...board.children];
 const cards = [...originals, ...originals.map(card => card.cloneNode(true))];
 const state = { revealed: [], locked: false, scores: [0, 0], turn: 0, matched: 0 };
@@ -12,7 +20,7 @@ board.replaceChildren(...cards);
 
 const scoreBoard = document.createElement('div');
 scoreBoard.style = 'display:flex;justify-content:center;gap:1rem;margin:0 auto 1rem;max-width:32rem';
-scoreBoard.innerHTML = '<div class="score-box">PLAYER 1<br><strong id="score-one">0</strong></div><div class="score-box">PLAYER 2<br><strong id="score-two">0</strong></div>';
+scoreBoard.innerHTML = `<div class="score-box">${playerNames[0]}<br><strong id="score-one">0</strong></div><div class="score-box">${playerNames[1]}<br><strong id="score-two">0</strong></div>`;
 document.querySelector('.wrap').insertBefore(scoreBoard, board);
 const scoreStyle = document.createElement('style');
 scoreStyle.textContent = '.score-box{flex:1;padding:.8rem;border:1px solid #765739;border-radius:1rem;background:#211d1c;color:#f5d58b;text-align:center;font:700 .8rem DM Sans}.score-box strong{font:900 1.8rem Cinzel}';
@@ -28,7 +36,7 @@ document.querySelector('.wrap').insertBefore(win, board);
 function updateUI() {
   document.querySelector('#score-one').textContent = state.scores[0];
   document.querySelector('#score-two').textContent = state.scores[1];
-  turnIndicator.textContent = `Player ${state.turn + 1}'s turn`;
+  turnIndicator.textContent = `${playerNames[state.turn]}'s turn`;
 }
 
 function finishTurn() {
@@ -52,7 +60,8 @@ function flipCard(card) {
     finishTurn();
     if (state.matched === originals.length) {
       const message = state.scores[0] === state.scores[1] ? '✦ DRAW — MYTHIC ARCHIVE COMPLETE ✦' : `✦ PLAYER ${state.scores[0] > state.scores[1] ? 1 : 2} WINS — MYTHIC ARCHIVE COMPLETE ✦`;
-      win.innerHTML = `<div>${message}</div><button class="restart" type="button">Restart Game</button>`;
+      const winner = state.scores[0] === state.scores[1] ? message : `✦ ${playerNames[state.scores[0] > state.scores[1] ? 0 : 1]} WINS — MYTHIC ARCHIVE COMPLETE ✦`;
+      win.innerHTML = `<div>${winner}</div><button class="restart" type="button">Restart Game</button>`;
       win.querySelector('.restart').style = 'margin-top:.8rem;padding:.65rem 1rem;border:1px solid #251b11;border-radius:999px;color:#f8efd8;background:#251b11;font:700 .8rem DM Sans;cursor:pointer';
       win.querySelector('.restart').addEventListener('click', () => start.click());
       win.style.display = 'block';
@@ -82,3 +91,15 @@ start.addEventListener('click', () => {
   board.replaceChildren(...cards); updateUI();
 });
 updateUI();
+
+if (params.get('players') === '1') {
+  const computerTurn = () => {
+    if (state.turn !== 1 || state.locked || state.revealed.length || state.matched === originals.length) return;
+    const available = cards.filter(card => card.classList.contains('flipped') && !card.dataset.matched);
+    if (available.length < 2) return;
+    const picks = available.sort(() => Math.random() - 0.5).slice(0, 2);
+    picks[0].click();
+    setTimeout(() => picks[1].click(), 300);
+  };
+  setInterval(computerTurn, 300);
+}
