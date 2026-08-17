@@ -1,6 +1,7 @@
 const board = document.querySelector('.gallery');
 const params = new URLSearchParams(location.search);
 const playerNames = [params.get('p1') || 'Player 1', params.get('p2') || 'Player 2'];
+const difficulty = params.get('difficulty') || 'normal';
 const exit = document.createElement('button');
 exit.type = 'button';
 exit.textContent = '← Exit';
@@ -99,7 +100,7 @@ if (params.get('players') === '1') {
     if (available.length < 2) return;
     const picks = available.sort(() => Math.random() - 0.5).slice(0, 2);
     picks[0].click();
-    setTimeout(() => picks[1].click(), 300);
+    setTimeout(() => picks[1].click(), difficulty === 'easy' ? 900 : difficulty === 'hard' ? 100 : 300);
   };
   setInterval(computerTurn, 300);
 }
