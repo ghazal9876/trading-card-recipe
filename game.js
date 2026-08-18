@@ -8,16 +8,30 @@ exit.textContent = '← Exit';
 exit.style = 'position:fixed;z-index:5;top:1.5rem;left:1.5rem;padding:.7rem 1rem;border:1px solid #d5ae63;border-radius:999px;color:#f8efd8;background:#211d1c;font:700 .8rem DM Sans;cursor:pointer';
 exit.addEventListener('click', () => { window.location.href = 'index.html'; });
 document.body.appendChild(exit);
+const extraHeroes = [
+  ['Starbloom', 'Astral Dryad', '✦', 'Legendary', 'storm', 'Starbloom grew beneath a fallen constellation, turning quiet wishes into luminous branches.', 86, 62, 95, 'Starlit Era'],
+  ['Frostmane', 'Glacier Wolf', '🐺', 'Rare', 'water', 'Frostmane crossed the silent ice fields, guiding wandering spirits by the glow of its breath.', 82, 88, 71, 'Winter Veil'],
+  ['Glimmerfin', 'Prism Koi', '🐟', 'Common', 'fire', 'Glimmerfin leapt through the mirror lakes, scattering seven colors whenever the moon was full.', 48, 79, 91, 'Glasswater Era']
+];
+extraHeroes.forEach(([name, type, icon, rarity, theme, story, power, speed, creativity, era]) => {
+  const card = document.createElement('article');
+  card.className = 'card';
+  card.innerHTML = `<div class="face"><header class="banner"><div><strong>${name}</strong><small style="display:block;color:#c69e5b;font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;margin-top:.25rem">${type}</small></div><span class="rarity">${rarity}</span></header><div class="art ${theme}" role="img" aria-label="${type} colorful placeholder"><span class="creature">${icon}</span></div><p class="label">Historical record</p><p class="explain">${story}</p><div class="stats"><div class="stat"><span>Power</span><span class="meter"><i style="width:${power}%"></i></span><b>${power}</b></div><div class="stat"><span>Speed</span><span class="meter"><i style="width:${speed}%"></i></span><b>${speed}</b></div><div class="stat"><span>Creativity</span><span class="meter"><i style="width:${creativity}%"></i></span><b>${creativity}</b></div></div><p class="legend">Fictional chronicle · ${era}</p></div>`;
+  board.appendChild(card);
+});
 const originals = [...board.children];
-const cards = [...originals, ...originals.map(card => card.cloneNode(true))];
-const state = { revealed: [], locked: false, scores: [0, 0], turn: 0, matched: 0 };
+const pairTemplates = originals.slice(0, 6);
+const cards = pairTemplates.flatMap(card => [card, card.cloneNode(true)]);
+const state = { revealed: [], locked: false, scores: [0, 0], turn: 0, matched: 0, round: 1 };
+const pairsPerRound = [3, 4, 6];
+const activeCards = () => cards.slice(0, pairsPerRound[state.round - 1] * 2);
 
 const style = document.createElement('style');
 style.textContent = `.card{perspective:1000px;cursor:pointer;background:transparent;border:0;box-shadow:none;padding:0}.flip-inner{position:relative;min-height:100%;transform-style:preserve-3d;transition:transform .55s}.card.flipped .flip-inner{transform:rotateY(180deg)}.flip-front,.flip-back{backface-visibility:hidden}.flip-back{position:absolute;inset:0;display:grid;place-items:center;min-height:28rem;border:1px solid #bd9350;border-radius:1.5rem;background:repeating-linear-gradient(45deg,#211d1c 0 10px,#2b2621 10px 20px);color:#d5ae63;font:900 2rem Cinzel;letter-spacing:.15em}.flip-back span{border:1px solid #765739;border-radius:1rem;padding:2rem}.flip-front{height:100%}.flip-back{transform:rotateY(180deg)}`;
 document.head.appendChild(style);
 
-for (let i = cards.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [cards[i], cards[j]] = [cards[j], cards[i]]; }
-board.replaceChildren(...cards);
+for (let i = cards.length - 2; i > 0; i -= 2) { const j = Math.floor(Math.random() * (i / 2 + 1)) * 2; [cards[i], cards[j], cards[i + 1], cards[j + 1]] = [cards[j], cards[i], cards[j + 1], cards[i + 1]]; }
+board.replaceChildren(...activeCards());
 
 const scoreBoard = document.createElement('div');
 scoreBoard.style = 'display:flex;justify-content:center;gap:1rem;margin:0 auto 1rem;max-width:32rem';
@@ -37,7 +51,7 @@ document.querySelector('.wrap').insertBefore(win, board);
 function updateUI() {
   document.querySelector('#score-one').textContent = state.scores[0];
   document.querySelector('#score-two').textContent = state.scores[1];
-  turnIndicator.textContent = `${playerNames[state.turn]}'s turn`;
+  turnIndicator.textContent = `Round ${state.round} of 3 · ${playerNames[state.turn]}'s turn`;
 }
 
 function finishTurn() {
@@ -59,7 +73,16 @@ function flipCard(card) {
     state.scores[state.turn] += 2;
     state.matched += 1;
     finishTurn();
-    if (state.matched === originals.length) {
+    if (state.matched === pairsPerRound[state.round - 1]) {
+      if (state.round < 3) {
+        state.round += 1;
+        state.matched = 0;
+        state.revealed = [];
+        cards.forEach(card => { card.classList.add('flipped'); delete card.dataset.matched; });
+        board.replaceChildren(...activeCards());
+        updateUI();
+        return;
+      }
       const message = state.scores[0] === state.scores[1] ? '✦ DRAW — MYTHIC ARCHIVE COMPLETE ✦' : `✦ PLAYER ${state.scores[0] > state.scores[1] ? 1 : 2} WINS — MYTHIC ARCHIVE COMPLETE ✦`;
       const winner = state.scores[0] === state.scores[1] ? message : `✦ ${playerNames[state.scores[0] > state.scores[1] ? 0 : 1]} WINS — MYTHIC ARCHIVE COMPLETE ✦`;
       win.innerHTML = `<div>${winner}</div><button class="restart" type="button">Restart Game</button>`;
@@ -86,17 +109,17 @@ start.type = 'button'; start.textContent = 'Start Game · Shuffle';
 start.style = 'display:block;margin:0 auto 1.5rem;padding:.8rem 1.2rem;border:1px solid #d5ae63;border-radius:999px;color:#251b11;background:#e0bb66;font:700 .8rem DM Sans;cursor:pointer';
 document.querySelector('.wrap').insertBefore(start, turnIndicator);
 start.addEventListener('click', () => {
-  state.revealed = []; state.locked = false; state.scores = [0, 0]; state.turn = 0; state.matched = 0; win.style.display = 'none';
+  state.revealed = []; state.locked = false; state.scores = [0, 0]; state.turn = 0; state.matched = 0; state.round = 1; win.style.display = 'none';
   cards.forEach(card => { card.classList.add('flipped'); delete card.dataset.matched; });
-  for (let i = cards.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [cards[i], cards[j]] = [cards[j], cards[i]]; }
-  board.replaceChildren(...cards); updateUI();
+  for (let i = cards.length - 2; i > 0; i -= 2) { const j = Math.floor(Math.random() * (i / 2 + 1)) * 2; [cards[i], cards[j], cards[i + 1], cards[j + 1]] = [cards[j], cards[i], cards[j + 1], cards[i + 1]]; }
+  board.replaceChildren(...activeCards()); updateUI();
 });
 updateUI();
 
 if (params.get('players') === '1') {
   const computerTurn = () => {
-    if (state.turn !== 1 || state.locked || state.revealed.length || state.matched === originals.length) return;
-    const available = cards.filter(card => card.classList.contains('flipped') && !card.dataset.matched);
+    if (state.turn !== 1 || state.locked || state.revealed.length || state.matched === pairsPerRound[state.round - 1]) return;
+    const available = activeCards().filter(card => card.classList.contains('flipped') && !card.dataset.matched);
     if (available.length < 2) return;
     const picks = available.sort(() => Math.random() - 0.5).slice(0, 2);
     picks[0].click();
