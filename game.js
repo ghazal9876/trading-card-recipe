@@ -25,12 +25,18 @@ const cards = pairTemplates.flatMap(card => [card, card.cloneNode(true)]);
 const state = { revealed: [], locked: false, scores: [0, 0], turn: 0, matched: 0, round: 1 };
 const pairsPerRound = [3, 4, 6];
 const activeCards = () => cards.slice(0, pairsPerRound[state.round - 1] * 2);
+function shuffleCards() {
+  for (let i = cards.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [cards[i], cards[j]] = [cards[j], cards[i]];
+  }
+}
 
 const style = document.createElement('style');
 style.textContent = `.card{perspective:1000px;cursor:pointer;background:transparent;border:0;box-shadow:none;padding:0}.flip-inner{position:relative;min-height:100%;transform-style:preserve-3d;transition:transform .55s}.card.flipped .flip-inner{transform:rotateY(180deg)}.flip-front,.flip-back{backface-visibility:hidden}.flip-back{position:absolute;inset:0;display:grid;place-items:center;min-height:28rem;overflow:hidden;border:1px solid #d5ae63;border-radius:1.5rem;background:radial-gradient(circle at 50% 42%,#593d2a 0 1px,transparent 2px),radial-gradient(circle at 50% 50%,#38271f 0 27%,transparent 27.5%),repeating-radial-gradient(circle at center,#765739 0 1px,transparent 1px 13px),linear-gradient(135deg,#120f13,#30221e 48%,#16131a);background-size:auto,auto,auto,100% 100%;color:#f5d58b;font:900 1.2rem Cinzel;letter-spacing:.2em;box-shadow:inset 0 0 0 .35rem #21191a,inset 0 0 0 .5rem #765739,inset 0 0 2rem #000}.flip-back:before,.flip-back:after{content:'✦';position:absolute;color:#d5ae63;font-size:1.4rem;text-shadow:0 0 1rem #e0bb66}.flip-back:before{top:1.2rem;left:1.4rem}.flip-back:after{right:1.4rem;bottom:1.2rem}.flip-back span{position:relative;display:grid;place-items:center;width:10rem;height:10rem;border:1px solid #bd9350;border-radius:50%;padding:2rem;text-align:center;background:radial-gradient(circle,#3a2822 0 28%,#17141a 29% 55%,transparent 56%);box-shadow:0 0 0 .3rem #21191a,0 0 0 .4rem #9a6d3f,0 0 1.5rem #000b}.flip-back span:before,.flip-back span:after{position:absolute;color:#c69e5b;font-size:.65rem;letter-spacing:.05em}.flip-back span:before{content:'✧  ✦  ✧';top:-1.65rem}.flip-back span:after{content:'✧  ✦  ✧';bottom:-1.65rem}.flip-back b{display:block;margin:.45rem 0 .25rem;color:#f5d58b;font-size:2.8rem;line-height:1;letter-spacing:0}.flip-back small{font:700 .42rem 'DM Sans';letter-spacing:.25em;color:#c69e5b}.flip-front{height:100%}.flip-back{transform:rotateY(180deg)}`;
 document.head.appendChild(style);
 
-for (let i = cards.length - 2; i > 0; i -= 2) { const j = Math.floor(Math.random() * (i / 2 + 1)) * 2; [cards[i], cards[j], cards[i + 1], cards[j + 1]] = [cards[j], cards[i], cards[j + 1], cards[i + 1]]; }
+shuffleCards();
 board.replaceChildren(...activeCards());
 
 const scoreBoard = document.createElement('div');
@@ -91,7 +97,7 @@ function flipCard(card) {
       win.style.display = 'block';
     }
   } else {
-    setTimeout(() => { state.revealed.forEach(card => card.classList.add('flipped')); finishTurn(); }, 1500);
+    setTimeout(() => { state.revealed.forEach(card => card.classList.add('flipped')); finishTurn(); }, 1000);
   }
 }
 
@@ -111,7 +117,7 @@ document.querySelector('.wrap').insertBefore(start, turnIndicator);
 start.addEventListener('click', () => {
   state.revealed = []; state.locked = false; state.scores = [0, 0]; state.turn = 0; state.matched = 0; state.round = 1; win.style.display = 'none';
   cards.forEach(card => { card.classList.add('flipped'); delete card.dataset.matched; });
-  for (let i = cards.length - 2; i > 0; i -= 2) { const j = Math.floor(Math.random() * (i / 2 + 1)) * 2; [cards[i], cards[j], cards[i + 1], cards[j + 1]] = [cards[j], cards[i], cards[j + 1], cards[i + 1]]; }
+  shuffleCards();
   board.replaceChildren(...activeCards()); updateUI();
 });
 updateUI();
