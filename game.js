@@ -21,11 +21,20 @@ extraHeroes.forEach(([name, type, icon, rarity, theme, story, power, speed, crea
 });
 const originals = [...board.children];
 const pairTemplates = originals.slice(0, 6);
-const cards = pairTemplates.flatMap(card => [card, card.cloneNode(true)]);
+const pairGroups = pairTemplates.map(card => [card, card.cloneNode(true)]);
+let cards = pairGroups.flat();
 const state = { revealed: [], locked: false, scores: [0, 0], turn: 0, matched: 0, round: 1 };
 const pairsPerRound = [3, 4, 6];
-const activeCards = () => cards.slice(0, pairsPerRound[state.round - 1] * 2);
+const activeCards = () => {
+  const activePairs = pairGroups.slice(0, pairsPerRound[state.round - 1]);
+  return cards.filter(card => activePairs.some(pair => pair.includes(card)));
+};
 function shuffleCards() {
+  for (let i = pairGroups.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pairGroups[i], pairGroups[j]] = [pairGroups[j], pairGroups[i]];
+  }
+  cards = pairGroups.flat();
   for (let i = cards.length - 1; i > 0; i -= 1) {
     const j = Math.floor(Math.random() * (i + 1));
     [cards[i], cards[j]] = [cards[j], cards[i]];
